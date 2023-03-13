@@ -5,7 +5,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
-import android.database.MatrixCursor;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -15,9 +14,9 @@ import com.example.demobe.DAO.UserDAO;
 import com.example.demobe.database.UserDatabase;
 import com.example.demobe.model.User;
 
-public class UserProvider extends ContentProvider {
+public class UserContProvider extends ContentProvider {
 
-    public static String AUTHOR ="com.example.demobe.provider";
+    public static String AUTHOR ="com.example.demobe.provider.UserContProvider";
     public static String TABLE_USER = "user";
     public static String URI_TABLE_USER = "content://" + AUTHOR + "/" +TABLE_USER;
     public static UriMatcher uriMatcher ;
@@ -28,7 +27,7 @@ public class UserProvider extends ContentProvider {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         uriMatcher.addURI(AUTHOR,TABLE_USER,1);
         uriMatcher.addURI(AUTHOR,TABLE_USER+"/#",2);
-
+        uriMatcher.addURI(AUTHOR,TABLE_USER+"/*",3);
         final Context context = getContext();
         if (context == null){
             return  false;
@@ -51,6 +50,9 @@ public class UserProvider extends ContentProvider {
                 cursor = userDAO.getListUser();
                 break;
             case 2:
+
+                break;
+            case 3:
                 String name = uri.getLastPathSegment();
                 cursor = userDAO.searchUser(name);
                 break;
@@ -62,7 +64,16 @@ public class UserProvider extends ContentProvider {
     @Nullable
     @Override
     public String getType(@NonNull Uri uri) {
-        return null;
+        switch(uriMatcher.match(uri)){
+            case 1:
+                return "vnd.android.cursor.dir/com.example.demobe.UserContProvider";
+            case 2:
+                return "vnd.android.cursor.item/com.example.demobe.UserContProvider";
+            case 3:
+                return "vnd.android.cursor.dir/com.example.demobe.UserContProvider";
+            default:
+                throw  new IllegalArgumentException("Unknow URI " + uri);
+        }
     }
 
     @Nullable
@@ -76,15 +87,29 @@ public class UserProvider extends ContentProvider {
 
     @Override
     public int delete(@NonNull Uri uri, @Nullable String s, @Nullable String[] strings) {
-        int userId = Integer.parseInt(uri.getLastPathSegment());
-        userDAO.deleteUserById(userId);
+        int matcher = uriMatcher.match(uri);
+        switch (matcher){
+            case 1:
+                userDAO.deleteAllUser();
+                break;
+            case 2:
+                int userId = Integer.parseInt(uri.getLastPathSegment());
+                userDAO.deleteUserById(userId);
+                break;
+            case 3:
+                break;
+        }
+
         return 0;
     }
 
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues contentValues, @Nullable String s, @Nullable String[] strings) {
-        int userId = Integer.parseInt(uri.getLastPathSegment());
+        int matcher = uriMatcher.match(uri);
+//        int userId = Integer.parseInt(uri.getLastPathSegment());
         userDAO.updateUser(User.fromContentValues(contentValues));
         return 0;
     }
+
+
 }

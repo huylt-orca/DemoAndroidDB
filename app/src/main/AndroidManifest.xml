@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-<!--    <permission android:name="com.example.demobe.provider.READ_WRITE"/>-->
-
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.demobe"
+    >
+    <permission android:name="com.example.demobe.provider.PERMISSION"
+        android:protectionLevel="normal"
+        />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -14,6 +16,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DemoBe"
         tools:targetApi="31">
+
+        <provider
+            android:name=".provider.UserContProvider"
+            android:authorities="com.example.demobe.provider.UserContProvider"
+            android:exported="true"
+            android:readPermission="com.example.demobe.provider.PERMISSION"
+            android:writePermission="com.example.demobe.provider.PERMISSION"
+            />
+
         <activity
             android:name=".UpdateUserActivity"
             android:exported="false">
@@ -35,13 +46,7 @@
                 android:value="" />
         </activity>
 
-        <provider
-            android:name=".provider.UserProvider"
-            android:authorities="com.example.demobe.provider"
-            android:exported="true"
-            android:grantUriPermissions="true"
-            android:enabled="true"
-             />
+
 
     </application>
 

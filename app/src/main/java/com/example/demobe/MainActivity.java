@@ -8,27 +8,28 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.demobe.adapter.UserAdapter;
 import com.example.demobe.database.UserDatabase;
 import com.example.demobe.model.User;
+import com.example.demobe.provider.UserContProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,12 +99,26 @@ public class MainActivity extends AppCompatActivity {
         });
 
         loadData();
+
+
+        PackageManager pm = getPackageManager();
+        ProviderInfo pi = pm.resolveContentProvider(UserContProvider.URI_TABLE_USER, 0);
+        if (pi != null) {
+            Toast.makeText(MainActivity.this,"publish",Toast.LENGTH_SHORT).show();
+
+        } else {
+            Toast.makeText(MainActivity.this,"private",Toast.LENGTH_SHORT).show();
+
+        }
     }
 
     private void handleSearchUser() {
         String strKeywords =  edtSearch.getText().toString().trim();
         mListUser.clear();
-        Cursor cursor = UserDatabase.getInstance(this).userDAO().searchUser(strKeywords);
+//        Cursor cursor = UserDatabase.getInstance(this).userDAO().searchUser(strKeywords);
+        ContentResolver contentResolver = getContentResolver();
+        Uri uri = Uri.parse(UserContProvider.URI_TABLE_USER + "/" +strKeywords);
+        Cursor cursor = contentResolver.query(uri,null,null,null,null);
 
         mListUser = User.ConvertCursorToListUser(cursor);
 
@@ -119,7 +134,11 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         // Delete User
-                        UserDatabase.getInstance(MainActivity.this).userDAO().deleteAllUser();
+//                        UserDatabase.getInstance(MainActivity.this).userDAO().deleteAllUser();
+                        ContentResolver contentResolver = getContentResolver();
+                        Uri uri = Uri.parse(UserContProvider.URI_TABLE_USER);
+                        contentResolver.delete(uri,null);
+
                         Toast.makeText(MainActivity.this,"Delete All User Successfully",Toast.LENGTH_SHORT).show();
                         loadData();
                     }
@@ -136,7 +155,16 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         // Delete User
-                        UserDatabase.getInstance(MainActivity.this).userDAO().deleteUser(user);
+//                        UserDatabase.getInstance(MainActivity.this).userDAO().deleteUser(user);
+                        ContentResolver contentResolver = getContentResolver();
+                        Uri uri = Uri.parse(UserContProvider.URI_TABLE_USER + "/" +user.getId());
+//                        String selection = "id=?";
+//                        String[] selectionArgs = new String[]{String.valueOf(user.getId())};
+
+                        int rowsDeleted = getContentResolver().delete(uri, null, null);
+
+
+
                         Toast.makeText(MainActivity.this,"Delete User Successfully",Toast.LENGTH_SHORT).show();
                         loadData();
                     }
@@ -168,7 +196,15 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        UserDatabase.getInstance(this).userDAO().inserUser(user);
+        ContentResolver contentResolver = getContentResolver();
+        Uri uri = Uri.parse(UserContProvider.URI_TABLE_USER);
+
+        ContentValues values = new ContentValues();
+        values.put("username", user.getUsername());
+        values.put("address", user.getAddress());
+
+        contentResolver.insert(uri,values);
+//        UserDatabase.getInstance(this).userDAO().inserUser(user);
         Toast.makeText(this, "Add User Successfull", Toast.LENGTH_SHORT).show();
 
         edtUsername.setText("");
@@ -188,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
     }
     private void loadData(){
         ContentResolver contentResolver = getContentResolver();
-        Uri uri = Uri.parse("content://com.example.demobe.provider/user");
+        Uri uri = Uri.parse(UserContProvider.URI_TABLE_USER);
         Cursor cursor = contentResolver.query(uri,null,null,null,null);
 //        Cursor cursor = UserDatabase.getInstance(this).userDAO().getListUser();
         mListUser = User.ConvertCursorToListUser(cursor);

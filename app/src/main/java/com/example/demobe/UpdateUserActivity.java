@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -15,8 +14,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.demobe.database.UserDatabase;
 import com.example.demobe.model.User;
+import com.example.demobe.provider.UserContProvider;
 
 public class UpdateUserActivity extends AppCompatActivity {
     private EditText edtUsername;
@@ -57,17 +56,17 @@ public class UpdateUserActivity extends AppCompatActivity {
         mUser.setUsername(strUsername);
         mUser.setAddress(strAddress);
 
-        UserDatabase.getInstance(this).userDAO().updateUser(mUser);
+//        UserDatabase.getInstance(this).userDAO().updateUser(mUser);
 
-//        ContentResolver contentResolver = getContentResolver();
-//        Uri uri = Uri.parse("content://com.example.demobe.UserProvider/user");
-//
-//        ContentValues values = new ContentValues();
-//        values.put("id", mUser.getId());
-//        values.put("username",mUser.getUsername());
-//        values.put("address",mUser.getAddress());
-//
-//        int rowsUpdated = contentResolver.update(uri, values, null, null);
+        ContentResolver contentResolver = getContentResolver();
+        Uri uri = Uri.parse(UserContProvider.URI_TABLE_USER);
+
+        ContentValues values = new ContentValues();
+        values.put("id", mUser.getId());
+        values.put("username",mUser.getUsername());
+        values.put("address",mUser.getAddress());
+
+        int rowsUpdated = contentResolver.update(uri, values, null, null);
 
         Toast.makeText(this, "Update Successful", Toast.LENGTH_SHORT).show();
 
